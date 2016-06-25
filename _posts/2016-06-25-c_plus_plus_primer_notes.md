@@ -1,6 +1,6 @@
 ---
 layout: post
-title: C++ primer 读书笔记
+title: "C++ primer 读书笔记"
 categories: c++
 tags: c++
 ---
