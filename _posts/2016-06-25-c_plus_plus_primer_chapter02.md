@@ -264,4 +264,28 @@ tags: c++
 
 
 
-  
+###### 类型别名
+
+* 传统的方式是使用`typedef`关键字
+
+      typedef double wages;        // wages 是double的别名
+      typedef wages base, *p;      // base 是double的别名，p是double*的别名
+
+      typedef char *pstring;
+      const pstring cstr = 0;      // cstr 是指向char的常量指针
+      const pstring *ps;           // ps是一个指针，它的对象是指向char的常量指针
+
+
+  遇到一条使用了类型别名的声明语句是，往往会错误地尝试把类型别名替换成它本来的样子，以理解该语句的含义：
+
+      const char *cstr = 0;       // 是对const pstring cstr的错误理解
+
+  声明语句中用到pstring时，其基本数据类型是指针。可是使用`char*`重写了声明语句后，数据类型就变成了`char`。前者声明了一个指向`char`的常量指针，改写后的形式则声明了一个指向`const char`的指针。
+
+* c++11新标准方式
+
+      using SI = Sales_item;      // SI是Sales_item的别名
+
+* 新标准中引入的`auto`类型说明符和`decltype`类型指示符
+
+ 
