@@ -166,7 +166,7 @@ tags: c++
       vector<string> v8{10, "hi"};      //v8有10个值为"hi"的元素
 
 
-###### `vector`对象上的操作
+* `vector`对象上的操作
 
       v.empty()          //如果v为空则返回true，否则返回false
       v.size()           //返回值类型为vector<T>::size_type
