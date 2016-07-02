@@ -184,4 +184,74 @@ tags: c++
 
   `vector`对象的下标运算符可以用于访问已经存在的元素，而不能用于添加元素。
 
+* `vector`使用限制
+
+  + 不能在范围`for`循环中向`vector`对象添加元素
+  + 任何一种可能改变`vector`对象容量的操作（如`push_back`），都会使该`vector`对象的迭代器失效
+
+
+###### 迭代器
+
+> 除了`vector`之外，标准库还定义了其他几种容器（iterator）。所有标准库容器都可以使用迭代器，但是只有其中少数几种才同时支持下标运算符。
+  `string`类型不属于容器，但是它支持很多与容器类似的操作，`string`类型也支持迭代器。
+  类似于指针类型，迭代器也提供了对对象的间接访问。就迭代器而言，其对象为容器中的元素或者`string`对象中的字符。
+
+* 迭代器类型
+
+  拥有迭代器的标准库类型使用`iterator`和`const_iterator`来表示迭代器的类型
+  
+      vector<int>::iterator it;             //it能读写vector<int>的元素
+      string::iterator it2;                 //it2能读写string对象中的字符
+
+      vector<int>::const_iterator it3;      //it3只能读元素，不能写元素
+      string::iterator it4;                 //it4只能读字符，不能写字符
+
+  `const_iterator`和常量指针类似，能读取但是不能修改它所指向的元素值。相反，`iterator`的对象可读可写。如果`vector`对象或`string`对象是一个常量，只能使用`const_iterator`；如果`vector`对象或`string`对象不是常量，那么既能使用`iterator`也能使用`const_iterator`。
+
+* 获取迭代器
+
+  拥有迭代器的类型都有返回迭代器的成员函数。
+  
+      auto b = v.begin();
+      auto e = v.end();
+
+  begin方法返回指向第一个元素的迭代器，end方法返回指向容器“尾元素的下一位置”的迭代器，也就是说，该迭代器指示的是容器的一个本不存在的“尾后（off the end）”元素。
+
+  > 如果容器为空，则begin和end返回的是同一个迭代器，都是尾后迭代器。
+
+  begin和end返回的具体类型右对象是否是常量决定，如果对象是常量，begin和end返回`const_iterator`；如果对象不是常量，返回`iterator`。
+
+      vector<int> v;
+      const vector<int> cv;
+      auto it1 = v.begin();        //it1的类型是vector<int>::iterator
+      auto it2 = cv.beging();      //it2的类型是vector<int>::const_iterator
+
+  C++11标准引入两个新函数，分别是`cbegin`和`cend`，无论`vector`对象本身是否是常量，返回值都是`const_iterator`。
+
+* 标准容器迭代器的运算符
+
+      *iter            //返回迭代器iter所指元素的引用
+      iter->mem        //解引用iter并获取该元素的名为mem的成员，等价与(*iter).mem
+      ++iter
+      --iter
+      iter1 == iter2   //两个迭代器指向的元素相同或者都是同一个容器的尾后迭代器，则返回true
+      iter1 != iter2
+
+  因为end操作返回的迭代器并不实际指向某个元素，所以不能对其进行递增或解引用操作。
+
+* 迭代器运算
+
+      iter + n
+      iter - n
+      iter += n
+      iter -= n
+      iter1 - iter2        //参与运算的两个迭代器必须属于同一个容器
+      >, >=, <, <=         //参与运算的两个迭代器必须属于同一个容器
+
+  迭代器距离指的是右侧迭代器向前移动多少位置就能追上左侧迭代器，其类型为`difference_type`的带符号整型。`string`和`vector`都定义了`difference_type`，因为这个距离可正可负，所以`difference_type`是带符号类型的。
+
+
+
+
+
 
