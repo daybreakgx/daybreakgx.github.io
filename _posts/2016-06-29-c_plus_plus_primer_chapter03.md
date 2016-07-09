@@ -18,7 +18,8 @@ tags: c++
 
 * 使用`using namespace::name`声明
 
-  位于头文件中的代码一般说不应该使用using声明
+  位于头文件中的代码一般不应该使用using声明  
+
   每个名字都要需要独立的using声明
 
       #include <iostream>
@@ -28,7 +29,7 @@ tags: c++
       {
           int i;
           cin >> i;
-          cout << i;    // 错误：没有对应的using声明，必须使用完成的名字
+          cout << i;    // 错误：没有对应的using声明，必须使用完整的名字 std::cout
           std::cout << i << ednl;
           return 0;
       }
@@ -192,7 +193,7 @@ tags: c++
 
 ###### 迭代器
 
-> 除了`vector`之外，标准库还定义了其他几种容器（iterator）。所有标准库容器都可以使用迭代器，但是只有其中少数几种才同时支持下标运算符。
+> 除了`vector`之外，标准库还定义了其他几种容器。所有标准库容器都可以使用迭代器(iterator)，但是只有其中少数几种才同时支持下标运算符。
   `string`类型不属于容器，但是它支持很多与容器类似的操作，`string`类型也支持迭代器。
   类似于指针类型，迭代器也提供了对对象的间接访问。就迭代器而言，其对象为容器中的元素或者`string`对象中的字符。
 
@@ -204,7 +205,7 @@ tags: c++
       string::iterator it2;                 //it2能读写string对象中的字符
 
       vector<int>::const_iterator it3;      //it3只能读元素，不能写元素
-      string::iterator it4;                 //it4只能读字符，不能写字符
+      string::const_iterator it4;           //it4只能读字符，不能写字符
 
   `const_iterator`和常量指针类似，能读取但是不能修改它所指向的元素值。相反，`iterator`的对象可读可写。如果`vector`对象或`string`对象是一个常量，只能使用`const_iterator`；如果`vector`对象或`string`对象不是常量，那么既能使用`iterator`也能使用`const_iterator`。
 
@@ -219,7 +220,7 @@ tags: c++
 
   > 如果容器为空，则begin和end返回的是同一个迭代器，都是尾后迭代器。
 
-  begin和end返回的具体类型右对象是否是常量决定，如果对象是常量，begin和end返回`const_iterator`；如果对象不是常量，返回`iterator`。
+  begin和end返回的具体类型由对象是否是常量决定，如果对象是常量，begin和end返回`const_iterator`；如果对象不是常量，返回`iterator`。
 
       vector<int> v;
       const vector<int> cv;
@@ -257,7 +258,7 @@ tags: c++
 * 数组与`vector`比较
 
   + 与`vector`相似的地方是，数组也是存放类型相同的对象的容器，这些对象本身没有名字，需要通过其所在位置访问。
-  + 与`vector`不同的地方是，数组的带笑傲确定不变，不能随意向数组中增加元素。
+  + 与`vector`不同的地方是，数组的大小确定不变，不能随意向数组中增加元素。
 
   > 如果不清楚元素的确切个数，请使用`vector`
 
@@ -296,7 +297,7 @@ tags: c++
       auto ia2(ia);            // ia2是一个整型指针，指向ia的第一个元素。当使用数组作为一个auto变量的初始值时，推断得到的类型是指针而非数组
       decltype(ia) ia3 = {0, 1, 2, 3, 4};     //ia3是一个含有10个整数的数组
 
-  C++11新标准中引入了连个名为`begin`和`end`的函数。这两个函数与容器中的两个同名成员函数功能类似。
+  C++11新标准中引入了两个名为`begin`和`end`的函数。这两个函数与容器中的两个同名成员函数功能类似。
 
       int ia[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
       int *beg = begin(ia);      //指向ia首元素的指针
