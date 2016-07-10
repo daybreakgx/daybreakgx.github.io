@@ -131,4 +131,236 @@ tags: c++
 
   函数完成后，它所占用的存储空间也随之被释放掉。因此，函数终止意味着局部变量的引用将指向不再有效的内存区域。同样，一旦函数完成，局部对象释放，局部对象的指针也将指向一个不存在的对象。
 
+* 引用返回左值
 
+  函数的返回类型决定函数调用是否是左值。
+
+  调用一个返回引用的函数得到左值，其他返回类型得到右值。可以像使用其他左值那样来使用返回引用的函数的调用，特别的，我们能为返回类型是非常量引用的函数的结果赋值。
+
+      char& get_val(string &str, string::size_type ix)
+      {
+          return str[ix];
+      } 
+
+      int main()
+      {
+          string s("a value");
+          cout << s << endl;
+          get_val(s, 0) = 'A';     //将s[0]的值改为A
+          cout << s << endl;       //输出 A value
+          return 0;
+      }
+
+* 返回指向数组的指针
+
+  + 使用类型别名的方式
+
+        typedef int arrT[10]; //arrT是一个类型别名，它表示的类型是含有10个整数的数组
+        using arrT = int[10]; //arrT的等价声明
+        arrT* func(int i);    //func返回一个指向10个整数的数组的指针
+
+  + Type (*function(parameter_list))[dimension]
+
+    Type表示元素的类型，dimension表示数组的大小，（*function(parameter_list))两端的括号一定要有，如果没有括号，函数的返回类型将是指针的数组。
+
+        int (*func(int i))[10];
+
+    func(int i)表示调用func函数时需要一个int类型的实参
+
+    (*func(int i))意味着我们可以对函数调用的结果执行解引用操作
+  
+    (*func(int i))[10]表示解引用func的调用将得到一个大小是10的数组
+
+    int (*func(int i))[10]表示数组中的元素是int类型
+
+
+  + 使用尾置返回类型
+
+    在C++11新标准中还有一种可以简化上述func声明的方法，就是使用尾置返回类型(tailing return type)。
+
+    任何函数定义都可以使用尾置返回，但是这种形式对于返回类型比较复杂的函数最有效。尾置返回类型跟在形参列表后面并以一个->符号开头。为了表示函数真正的返回类型跟在形参列表后面，我们在本应该出现返回类型的地方放置一个auto:
+    
+        //func接受一个int类型的实参，返回一个指针，该指针指向含有10个整数的数组
+        auto func(int i) -> int(*)[10];
+
+  + 使用decltype
+    
+    还有一种情况，如果我们知道函数返回的指针指向哪个数组，就可以使用decltype关键字声明返回类型。
+
+        int odd[] = {1, 3, 5, 7, 9};
+        int even[] = {0, 2, 4, 6, 8};
+        //返回一个指针，该指针指向含有5个整数的数组
+        decltype(odd) *arrPtr(int i)
+        {
+            return (i % 2) ? &odd : & even;
+        }
+
+    decltype并不负责把数组类型转换成对应的指针，所以decltype的结果是个数组，要想表示arrPtr返回指针还必须在函数声明时加一个*符号。
+
+###### 函数重载
+
+> 如果同一个作用域内的几个函数名称相同但是形参列表不同，我们称之为**重载(overloaded)函数**。
+  main函数不能重载。
+
+* 定义重载函数
+
+  对于重载函数来说，它们应该在形参数量或者形参类型上有所不同。不允许两个函数除了返回类型以外其他所有的要素都相同。
+
+      Record lookup(const Account&);
+      bool lookup(const Account&);    //错误: 与上一个函数相比只有返回类型不同
+
+
+* 重载和const形参
+
+  + 顶层const不影响传入函数的对象，一个拥有顶层const的形参无法和另一个没有顶层const的形参区分开来
+
+        Record lookup(Phone);
+        Record lookup(const Phone);      //重复声明了Record lookup(Phone)
+
+        Record lookup(Phone*);
+        Record lookup(Phone* const);     //重复声明了Record lookup(Phone*)
+
+  + 如果形参是某种类型的指针或引用，则通过区分其指向的是常量对象还是非常量对象（底层const）可以实现函数重载。
+
+        //下面定义了4个独立的重载函数
+        Record lookup(Account&);
+        Record lookup(const Account&);
+
+        Record lookup(Account*);
+        Record lookup(const Account*);
+
+* 调用重载的函数
+
+  > **函数匹配(function matching)**是指一个过程，在这个过程中我们把函数调用与一组重载函数中的某一个关联起来，函数匹配也叫**重载确定(overloaded resolution)**。
+
+  当调用重载函数时有三种可能的结果:
+
+    + 编译器找到一个与实参**最佳匹配(best match)**的函数，并生成调用该函数的代码
+    + 找不到任何一个函数与调用的实参匹配，此时编译器发出**无匹配(no match)**的错误信息
+    + 有多于一个函数可以匹配，但是每一个都不是明显的最佳选择。此时也将发生错误，称为**二义性调用(ambiguous call)**
+
+###### 默认实参
+
+* 默认实参作为形参的初始值出现再形参列表中。我们可以为一个或多个形参定义默认值，不过需要注意的是，一旦某个形参被赋予了默认值，它后面的所有形参都必须有默认值。
+
+* 函数调用时实参按其位置接卸，默认实参负责填补函数调用缺少的尾部实参（靠右侧位置）。当设计含有默认实参的函数是，其中一项任务是合理设置形参的顺序，尽量让不怎么使用默认值的形参出现在前面，而让那些经常使用默认值的形参出现在后面。
+
+* 局部变量不能作为默认实参。除此之外，只要表达式的类型能转换成形参所需的类型，该表达式就能作为默认实参。用作默认实参的名字在函数声明所在的作用域内解析，而这些名字的求值过程发生在函数调用时。
+
+      typedef string::size_type sz;
+      string screen(sz ht = 24, sz wid=80, char backgrnd = ' ');
+
+      string window;
+      window = screen();         //等价于screen(24, 80, ' ');
+      window = screen(66);       //等价于screen(66, 80, ' ');
+      window = screen(66, 256);  //等价于screen(66, 256, ' ');
+      window = screen(66, 256, '#');
+
+      window = screen(, , '?');   //错误: 只能省略尾部的实参
+
+###### 内联函数和constexpr函数
+
+* 内联函数
+
+  内联函数通常就是将它在每个调用点上“内联地”展开。
+
+  一般来说，内联机制用于优化规模较小、流程直接、频繁调用的函数。在函数的返回类型前面加上关键字inline，就可以将函数声明成内联函数了。
+
+      inline const string& shorterString(const string &s1, const string &s2)
+      {
+          return s1.size() <= s2.size() ? s1 : s2;
+      }
+
+* constexpr函数
+
+  constexpr函数是指能用于常量表达式的函数。constexpr函数的定义需要遵循下面几项约定:
+
+    + 函数的返回类型及所有形参的类型都是字面值类型
+    + 函数体中必须有且只有一条return语句
+
+  constexpr函数不一定返回常量表达式
+
+  constexpr函数举例
+
+      constexpr int new_sz() { return 32; }
+      constexpr int foo = new_sz();          //foo是一个常量表达式
+
+  编译器能在程序编译时验证new_sz函数返回的是常量表达式，所以可以用new_sz函数初始化constexpr类型的变量foo。
+  
+  执行初始化任务时，编译器把对constexpr函数的调用替换成其结果。为了能在编译过程中随时展开，constexpr函数被隐式地指定为内联函数。
+
+
+* 通常将内联函数和constexpr函数定义在头文件中。
+
+###### 调试帮助
+
+  程序可以包含一些用于调试的代码，但是这些代码只在开发程序时使用，当C++应用程序编写完成准备发布时，要先屏蔽掉调试代码。这种方法用到两项预处理功能: assert 和 NDEBUG。
+
+* assert预处理宏
+
+  assert是一种预处理宏。所谓预处理宏其实是一个预处理变量，它的行为有点类似于内联函数。assert宏使用一个表达式作为它的条件:
+      
+      assert(expr);
+  
+  首先对expr求值，如果表达式为假（即0），assert输出信息并终止程序运行。如果表达式为真（即非0），assert什么也不做。
+
+  assert宏定义在cassert头文件中。
+
+  预处理名字由预处理器而非编译器管理，因此我们可以直接使用预处理名字而无须提供using声明。也就是说，我们应该使用assert而不是std::assert，也不需要为assert提供using声明。
+
+  assert宏常用于检查“不能发生”的条件。
+
+ 
+* NDEBUG预处理变量
+
+  assert的行为依赖于一个名为NDEBUG的预处理变量的状态。如果定义了NDEBUG，则assert什么也不做。默认状态下没有定义NDEBUG，此时assert将执行运行时检查。
+
+  可以使用一个#define 语句定义NDEBUG，从而关闭调试状态。
+  很多编译器也提供了一个命令行选项使我们可以定义预处理变量:
+  
+      $CC -D NDEBUG main.cc
+  
+  这条命令等价于在main.cc文件的一开始写#define NDEBUG
+
+  assert应该仅用于验证那些确实不可能发生的事情。我们可以把assert当成调试程序的一种辅助手段，但是不能用它替代真正的运行时逻辑检查，也不能替代程序本身应该包含的错误检查。
+
+  除了用于assert外，也可以使用NDEBUG编写自己的条件调试代码。如果NDEBUG未定义，将执行#ifndef 和#endif之间的代码；如果定义了NDEUBG，这些代码将被忽略掉:
+
+      void print(const int ia[], size_t size)
+      {
+      #ifndef NDEBUG
+          //__func__ 是编译器定义的一个局部静态变量，用于存放函数的名字
+          cerr << __func__ << ": array size is " << size << endl;
+      #endif
+      ...
+      }
+  
+  \__func__     存放函数名的字符串字面值
+  \__FILE__     存放文件名的字符串字面值
+  \__LINE__     存放当前行号的整型字面值
+  \__TIME__     存放文件编译时间的字符串字面值
+  \__DATE__     存放文件编译日期的字符串字面值
+
+
+###### 函数匹配
+
+
+* 调用重载函数时应尽量避免强制类型转换，如果在实际应用中确实需要强制类型转换，则说明我们设计的形参集合不合理。
+
+* 为了确定最佳匹配，编译器将实参类型到形参类型的转换划分成几个等级
+
+  + 精确匹配，包括一下情况
+  
+    - 实参类型和形参类型相同
+    - 实参从数组类型或函数类型转换成对应的指针类型
+    - 向实参添加顶层const或者从实参中删除顶层const
+
+  + 通过const转换实现的匹配
+
+  + 通过类型提升实现的匹配
+
+  + 通过算术类型转换或指针转换实现的匹配
+
+  + 通过类类型转换实现的匹配
+
+  

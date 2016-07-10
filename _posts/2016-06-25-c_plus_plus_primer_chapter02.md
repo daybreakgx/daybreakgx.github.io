@@ -516,4 +516,24 @@ tags: c++
       int ci = 0;
       decltype(f()) sum = x;
       decltype(ci) x = 0; 
+  
+  
+      const int ci = 0, &cj = ci;
+      decltype(ci) x = 0;         //x的类型是const int
+      decltype(cj) y = x;         //y的类型是const int&，y绑定到变量x
+      decltype(cj) z;             //错误: z是一个引用，必须初始化
+
+      int i = 32, *p = &i, &r = i;
+      decltype(r + 0) b;          //正确: 加法的结果是int，因此b是一个（未初始化的）int
+      decltype(*p) c;             //错误: c是int&，必须初始化
+      decltype(&p) pp;            //正确: pp是一个int**，一个指向整数指针的指针。
+
+      //decltype的表达式如果是加上了括号的变量，结果将是引用
+      decltype((i)) d;            //错误: d是int&，必须初始化
+      decltype(i) e;              //正确: e是一个（为初始化的）int
+
+  > decltype((variable)) （注意是双括号）的结果永远是引用，而decltype(variable)的结果只有当variable本事是一个引用时才是引用。
+
+
+
 
