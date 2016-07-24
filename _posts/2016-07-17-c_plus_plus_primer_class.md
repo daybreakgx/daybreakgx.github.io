@@ -548,4 +548,181 @@ C++11标准扩展了构造函数初始值的功能，使得可以定义所谓的
       };
 
 
+##### 隐式的类类型转换
+
+* 如果构造函数只接受一个实参，则它实际上定义了转换为此类类型的隐式转换机制，有时我们称这种构造函数为**转换构造函数(converting constructor)**。
+
+* 编译器只会自动地执行一步类型转换。
+
+      string null_book = "9-999-99999-9";
+      
+      // 构造一个临时的Sales_data对象
+      // 该对象的units_sold 和 revenue等于0，bookNo等于null_book
+      item.combine(null_book);
+
+
+      // 错误: 需要用户定义的两种转换:
+      // (1) 把9-999-99999-9 转换成string
+      // (2) 再把这个临时的string转换成Sales_data
+      item.combine("9-999-99999-9");
+ 
+      // 正确: 显示的转换为string，隐式的转换为Sales_data
+      itme.combine(string("9-999-99999-9"));
+
+      // 正确: 隐式的转换为string，显示的转换为Sales_data
+      item.combine(Sales_data("9-999-99999-9"));
+
+* 可以通过将构造函数声明为`explicit`抑制构造函数定义的隐式转换
+
+      class Sales_data {
+      public:
+          Sales_data() = default;
+          Sales_data(const std::string& s, unsigned n, double p): bookNo(s), units_sold(n), revenue(n * p) {}
+          explicit Sales_data(const std::string& s): bookNo(s) {}
+          explicit Sales_data(std::istream&);
+      };
+
+      item.combine(null_book);     //错误: string构造函数是explicit的
+      item.combine(cin);           //错误: istream构造函数是explicit的
+
+  上面代码中，没有任何构造函数能用于隐式的创建Sales_data对象。
+
+  关键字explicit只对一个实参的构造函数有效。需要多个实参的构造函数不能用于执行隐式转换，所以无须将这些构造函数指定为explicit的。
+
+  只能在类内声明构造函数时使用explicit关键字，在类外部定义时不应重复。
+
+      // 错误: explicit关键字只允许出现在类内的构造函数声明处
+      explicit Sales_data::Sales_data(std::istream& is) {
+          read(is, *this);
+      }
+
+
+  当执行拷贝形式的初始化时（使用=）会发生隐式转换。此时我们只能使用直接初始化
+
+      Sales_data item1(null_book);     //正确: 直接初始化
+
+      // 错误: 不能将explicit构造函数用于拷贝形式的初始化过程
+      Sales_data item2 = null_book;
+
+  尽管编译器不会将explicit的构造函数用于隐式转换过程，但是我们可以使用这样的构造函数显式地强制进行转换。
+
+      // 正确: 实参是一个显式构造的Sales_data对象
+      item.combine(Sales_data(null_book));
+
+      // 正确: static_cast可以使用explicit的构造函数
+      item.combine(static_cast<Sales_data>(cin));
+
+##### 聚合类
+
+* **聚合类(aggregate class)**使得用户可以直接访问其成员，并且具有特殊的初始化语法形式。当一个类满足如下条件是，我们说它是聚合的：
+  
+  + 所有的成员都是public。
+  + 没有定义任何构造函数。
+  + 没有类内初始值。
+  + 没有基类，也没有virtual函数。
+
+      struct Data {
+          int ival;
+          string s;
+      };
+
+  我们可以提供一个花括号括起来的成员初始值列表，并用它初始化聚合类的数据成员。初始值的顺序必须与声明的顺序一致，也就是说，第一个成员的初始值要放在第一个，然后是第二个，依次类推。
+
+      //val1.ival = 0; val1.s = string("Anna")
+      Data val1 = { 0, "Anna"};
+
+      // 错误:不能使用"Anna"初始化ival，也不能使用1024初始化s
+      Data val2 = {"Anna", 1024};
+
+  与初始化数组元素的规则一样，如果初始值列表中的元素个数少于类的成员数量，则靠后的成员被值初始化。初始值列表的个数绝对不能超过类的成员数量。
+
+  显示初始化类的对象的成员存在三个明显的缺点:
+  
+  + 要求类的所有成员都是public的
+  + 将正确初始化每个对象的每个成员的重任交给了类的用户（而非类的作者）
+  + 添加或删除一个成员之后，所有的初始化语句都需要更新
+
+##### 字面值常量类
+
+数据成员都是字面值类型的聚合类是字面值常量类。如果一个类不是聚合类，但它符合以下要求，则它也是一个字面值常量类:
+
+  + 数据成员都必须是字面值类型
+  + 类必须至少包含一个constexpr构造函数
+  + 如果一个数据成员含有类内初始值，则内置类型成员的初始值必须是一条常量表达式；或者如果成员属于某种类类型，则初始值必须使用成员自己的constexpr构造函数
+  + 类必须使用析构函数的默认定义，该成员负责销毁类的对象。
+
+通过前置关键子constexpr可以声明一个constexpr构造函数。
+
+constexpr构造函数可以声明成=default的形式（或者是删除函数的形式）。否则，constexpr构造函数就必须既符合构造函数的要求（意味着不能包含返回语句），又要符合constexpr函数的要求（意味着它能拥有的唯一可执行语句就是返回语句）。综合这两点可知，constexpr构造函数体一般来说应该是空的。
+
+constexpr构造函数必须初始化所有的数据成员，初始值或者使用constexpr构造函数或者是一条常量表达式。
+
+
+
+##### 类的静态成员
+
+> 有的时候类需要它的一些成员与类本身直接相关，而不是与类的各个对象保持关联。这时就需要静态成员了。
+
+
+###### 声明静态成员 
+
+通过在成员声明前加上关键字static使得其与类关联在一起。和其他成员一样，静态成员可以是public或private的。静态数据成员的类型可以是常量、引用、指针、类类型等。
+
+同样的，静态成员函数也不与任何对象绑定在一起，它们不包含this指针。作为结果，静态成员函数不能声明成const的，而且我们也不能在static函数体内使用this指针。这一限制既适用于this的显示使用，也对调用非静态成员的隐式使用有效。
+
+    class Account {
+    public:
+        void calculate() { amount += amount * interestRate; }
+        static double reate() { return interestRate; }
+        static void rate(double);
+    private:
+        std::string owner;
+        double amount;
+        static double interestRate;
+        static double initRate(); 
+    };
+
+###### 使用静态成员
+
+* 使用作用域运算符直接访问静态成员
+
+      double r;
+      r = Account::rate();
+
+* 虽然静态成员不属于某个对象，但是我们仍然可以使用类的对象、引用或者指针来访问静态成员
+
+      Account ac1;
+      Account *ac2 = &ac1;
+
+      // 调用静态成员函数rate的等价形式
+      r = ac1.rate();
+      r = ac2->rate();
+
+* 成员函数不用通过作用域运算符就能直接使用静态成员
+
+###### 定义静态成员
+
+* 和其他成员一样，我们既可以在类的内部也可以在类的外部定义静态成员函数。在类的外部定义静态成员时，不能重复static关键字，该关键字只能出现在类内部的声明语句
+
+* 因为静态数据成员不属于类的任何一个对象，所以它们并不是在创建类的对象时被定义的。这意味着它们不能由类的构造函数初始化。而一般来讲，我们不能在类的内部初始化静态成员。相反的，必须在类的外部定义和初始化每个静态成员。
+
+      double Account::interestRate = initRate();
+
+* 通常情况下，类的静态成员不应该在类的内部初始化。然而，我们可以为静态成员提供const整数类型的类内初始值，不过要求静态成员必须是字面值常量类型的constexpr。
+
+      class Account {
+      public:
+          static double reate() { return interestRate; }
+          static void rate(double);
+      private:
+          static constexpr int period = 20;
+          double daily_tbl[period];
+　　　};
+      
+      // 如果在类的内部提供了一个初始值，则成员的定义不能再指定一个初始值了。
+      // 即使一个常量静态数据成员在类内部被初始化了，通常情况下，也应该在类的外部定义一下该成员。
+      constexpr int Account::period;
+
+* 可以使用静态成员作为默认实参，而非静态成员不能作为默认实参。
+
 
