@@ -10,9 +10,7 @@ icon: bookmark
 
 ## 工具
 
-* [git 教程](http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
-
-    廖雪峰的git教程。
+* [廖雪峰的git 教程](http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
 
 
 ## 编程语言
@@ -20,6 +18,12 @@ icon: bookmark
 ### NodeJS
 
 * [七天学会NodeJS -Nanqiao Deng](https://nqdeng.github.io/7-days-nodejs)
+
+### C++
+
+* [C++](http://www.cplusplus.com/)
+* [gcc libstdc++](https://gcc.gnu.org/libstdc++/)
+
 
 ## 框架
 
