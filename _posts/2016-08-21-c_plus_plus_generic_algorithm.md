@@ -205,8 +205,12 @@ tags: c++
   + 一元谓词(unary predicate): 只接受单一参数
   + 二元谓词(binary predicate): 接受两个参数
 
+
 * 接受谓词参数的算法对输入序列中的元素调用谓词。因此，元素类型必须能转换为谓词的参数类型。
  
+* 根据算法接受一元还是二元谓词，我们传递给算法的谓词必须严格接受一个或两个参数。但是，有时我们希望进行的操作需要更多的参数，超出了算法对谓词的限制。
+  为了解决此问题，需要使用另外一些语言特性，如lambda表达式和bind参数绑定。
+
 
 ##### lambda表达式
 
@@ -250,6 +254,166 @@ tags: c++
 
 ###### 向lambda传递参数
 
+* 与普通参数不同的是，lambda不能有默认参数。因此，一个lambda调用实参数目永远与形参数目相等。
 
+      //按长度排序，长度相等的单词维持字典序
+      stable_sort(words.begin(), words.end(),
+                  [](const string &a, const string &b)
+                  { return a.size() < b.size(); } );
+  
+  当stable_sort需要比较两个元素时，它就会调用给定的lambda表达式。
+
+###### lambda捕获列表
+
+* 当定义一个lambda时，编译器生成一个与lambda对应的新的(未命名的)类类型。可以这样理解，当向一个函数传递一个lambda时，同时定义了一个新类型和该类型的对象:传递的参数就是此编译器生成的类类型的未命名对象。
+  类似的，当使用auto定义一个用lambda初始化的变量时，定义了一个从lambda生成的类型的对象。
+
+  默认情况下，从lambda生成的类包含一个对应该lambda所捕获的变量的数据成员。类似任何普通类的数据成员，lambda的数据成员也在lambda对象创建时被初始化。
+
+* 值捕获
+
+  与传值参数类似，采用值捕获的前提是变量可以拷贝。与参数不同，被捕获的变量的值是在lambda创建是拷贝，而不是调用是拷贝。
+
+      void fcn1()
+      {
+          size_t v1 = 32; // 局部变量
+          // 将v1拷贝到名为f的可调用对象
+          auto f = [v1]{return v1;};
+          v1 = 0;
+          auto j = f(); // j为32；f保存了我们创建它时v1的拷贝
+          auto f2 = [v1] () mutable { return ++v1; };
+          auto k = f2(); // k = 1
+      }
+
+  > 默认情况下，对于一个值拷贝的捕获变量，lambda不会改变其值。如果我们希望改变它时，就必须在参数列表后面加关键字mutable。
+
+* 引用捕获
+
+  一个以引用方式捕获的变量与其他任何类型的引用的行为类似。当我们在lambda函数体内使用此变量时，实际上使用的是引用所绑定的对象。
+
+      void fcn2()
+      {
+          size_t v1 = 32;
+          auto f2 = [&v1] { return v1; };
+          auto f3 = [&v1] { return ++v1; };
+          v1 = 0;
+          auto j = f2();  // j = 0, f2保存v1的引用而非拷贝
+          auto k = f3();  // j = 1, 
+      }
+
+  当使用引用方式捕获一个变量时，必须保证在lambda执行时变量是存在的。
+
+  > 一个引用捕获的变量是否可以修改，依赖于此引用指向的是一个const类型还是一个非const类型。
+
+  > 一般情况下，应该尽量减少捕获的数据量，来避免潜在的捕获导致的问题。而且，如果可能的话，应该避免捕获指针或引用。
+
+* 隐式捕获
+
+  可以让编译器根据lambda体中的代码来推断我们需要使用哪些变量。为了指示编译器推断捕获列表，应在捕获列表中写一个&或=。
+  & 告诉编译器采用引用捕获方式
+  = 告诉编译器采用值捕获方式
+
+  如果我们希望对一部分变量采用值捕获，对其他变量采用引用捕获，可以混合使用隐式捕获和显示捕获:
+
+      void biggies(vector<string> &words, vector<string>::size_type sz, ostream &os = cout, char c = ' ')
+      {
+          //os 隐式捕获，引用捕获方式；c显示捕获，值捕获方式
+          for_each(words.begin(), words.end(),
+                   [&, c](const string &s) { os << s << c; } );
+
+          //os 显示捕获，引用捕获方式；c隐式捕获，值捕获方式
+          for_each(words.begin(), words.end(),
+                   [=, &os](const string &s) { os << s << c; } );
+      }
+
+  > 当混合使用隐式捕获和显示捕获时，捕获列表中的第一个元素必须是一个 & 或 =。此复合指定了默认捕获方式为引用或值。
+
+  > 当混合使用隐式捕获和显示捕获时，显示捕获的变量必须使用隐式捕获不同的方式。即，如果隐式捕获是引用方式，则显示捕获必须采用值方式。
+
+###### lambda返回类型
+
+  默认情况下，如果一个lambda体包含return之外的任何语句，则编译器假定此lambda返回void。与其他返回void的函数类似，被推断返回void的lambda不能返回值。
+
+      // 正确
+      transform(vi.begin(), vi.end(), vi.begin(),
+                [] (int i) { return i < 0 ? -i : i; });
+      // 错误,不能推断lambda的返回类型
+      transform(vi.begin(), vi.end(), vi.begin(), 
+                [] (int i) { if (i<0) return -i; else return i; });
+
+      // 正确
+      transform(vi.begin(), vi.end(), vi.begin(),
+                [] (int i) -> int
+                { if(i<0) return -i; else return i; });
+
+##### bind与参数绑定
+
+* 很多地方都会使用，且需要捕获局部变量的lambda表达式。不能用普通的函数替代。此时可以使用bind标准库函数。它定义在#include <functional>头文件中。
+
+  可以将bind函数看做一个通用的函数适配器，它接受一个可调用对象，生成一个新的可调用对象来“适应”原对象的参数列表。
+
+###### 调用bind的一般形式
+
+* 一般形式为
+
+      auto newCallable = bind(callable, arg_list);
+
+  newCallable 本身是一个可调用对象，
+  arg_list 是一个逗号分割的参数列表，对应给定的callable参数。
+  即，当我们调用newCallable时，newCallable会调用callable，并传递给它arg_list中的参数。 
+
+  arg_list中的参数可能包含形如_n的名字，其中n是一个整数。这些参数是“占位符”，表示newCallable的参数: _1 为newCallable的第一个参数，_2为newCallable的第二个参数，依次类推。
+  名字_n都定义在placeholders的命名空间中，而这个命名空间本身定义在std命名空间中。为了使用这些_1,_2的名字，需要声明
+
+      using namespace std::placeholders;
+
+      bool check_size(const string &s, string::size_type sz);
+
+      auto check6 = bind(check_size, _1, 6);
+
+      // 使用lambda方式
+      auto wc = find_if(words.begin(), words.end(), [sz](const string &s) { return s.size() > sz;});
+      // 使用bind方式
+      auto wc = find_if(words.begin(), words.end(), bind(check_size, _1, sz));
+
+###### 使用bind重排参数顺序
+
+* 可以使用bind绑定给定可调用对象中的参数或重新安排其顺序。例如，假定f是一个可调用对象，有5个参数
+
+      // g是一个有两个参数的可调用对象
+      auto g = bind(f, a, b, _2, c, _1);
+
+      g(x, y); // 等价于f(a, b, y, c, x);
+
+* 绑定引用参数
+
+  默认情况下，bind的那些不是占位符的参数被拷贝到bind返回的可调用对象中。如果我们希望使用引用方式传递时，需要使用ref()或cref()。
+  ref 函数返回一个对象，包含给定的引用，此对象是可以拷贝的。
+  cref函数，生成一个保存const引用的类。
+  ref和cref也定义在头文件functional中。
+
+      ostream& print(ostrem& os, const string& s, char c) 
+      {
+          return os << s << c;
+      }
+
+      // lambda 版本实现
+      for_each(words.begin(), words.end(), [&os, c](const string& s) { os << s << c; });
+
+      // 错误的bind版本，不能拷贝os
+      for_each(words.begin(), words.end(), bind(print, os, _1, c)); 
+     
+      // 正确的bind版本
+      for_each(words.beging(), words.end(), bind(print, ref(os), _1, c));
+
+##### 泛型算法规则
+
+###### 算法形参模式
+
+###### 算法命名规范
+
+##### 特定容器算法
+
+##### 常用算法说明
 
 
