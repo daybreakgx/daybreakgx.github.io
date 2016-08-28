@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "SD基本概念及规格"
-categories: 驱动 sd
-tags: sd sdio
+categories: sd
+tags: sd 
 ---
 
 * content
