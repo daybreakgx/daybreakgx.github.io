@@ -8,6 +8,54 @@ tags: sd
 * content
 {:toc}
 
+##### SD总线协议
+
+* SD总线之间的通信是基于命令和数据比特流的。它们都是开始于起始位，终止于结束位。
+
+  + Command: 一个命令代表了一个操作的开始。命令总是由主机发送给单个(addressed command)或所有(broadcast command)的卡。命令是通过CMD线串行传输的。
+
+  + Response: a response is a token that is sent from an addressed card, or (synchronously) from all connected cards, to the host as an answer to a previously received command. A response is transferred serially on the CMD line.
+
+  + Data: data can be transferred from the card to the host or vice versa. Data is transferred via the data lines.
+
+* 卡的寻址是通过session address实现的。它是在卡的初始化阶段就被分配好的。SD总线中最基础transaction 就是 command/response。这种模式下，总线直接通过命令或响应的结构体进行信息传递。除此之外，其他操作有数据传递。
+
+  数据传输是以block为单位的。数据块后面总是带有CRC校验位。数据传输分为单块和多块数据传输。多块数据传输通常由stop命令来结束数据传输操作。
+
+  主机(HOST)可以配置数据传输方式为单块或多块。
+
+  在块写操作中，使用了一种简单的等待机制。通过判断DATA0信号状态来判断卡是否busy还是ready。
+
+  ![sd_bus_cmd_resp](/image/sd/sd_bus_cmd_resp_mode.png)
+
+  ![sd_bus_read_mode](/image/sd/sd_bus_read_mode.png)
+
+  ![sd_bus_write_mode](/image/sd/sd_bus_write_mode.png)
+
+* command and response 
+  
+  + 都是由start bit(0)开始，由end bit(1)终止
+
+  + 命令长度为48bits，响应长度为48bits或136bits
+  
+  + 都包含CRC校验位
+
+  + CMD line上的数据传输方式: MSB(Most Significant Bit) 先传输，LSB(Least Significant Bit)后传输
+
+  ![sd_cmd_token_format](/image/sd/sd_cmd_token_format.png)
+
+  ![sd_reps_token_format](/image/sd/sd_resp_token_format.png)
+
+* data packet format
+
+  + Usual data(8-bit width): 在字节之间先传输低字节，在字节内部先传输高比特位。  
+  
+  + Wide width data(SD Memory Register): 共有512 bit，先传输高比特位，后传输低比特位。
+
+  ![sd_bus_usual_data](/image/sd/sd_bus_usual_data_mode.png)
+
+  ![sd_bus_wide_width_data](/image/sd/sd_bus_wide_width_data_mode.png)
+
 ##### 命令类型
 
 * 下面是4种用于控制SD卡的命令:
@@ -114,4 +162,52 @@ tags: sd
 
     CMD52是一个读写寄存器的指令，R5用于CMD52的响应。
 
+
+##### 命令详细
+
+###### Basic Commands
+
+  ![basic_commands](/image/sd/sd_basic_commands.png)
+
+###### Block-Oriented Read Commands
+
+  ![block_read_commands](/image/sd/sd_block_read_commands.png)
+
+###### Block-Oriented Write Commands
+
+  ![block_write_commands](/image/sd/sd_block_write_commands.png)
+
+###### Block-Oriented Write Protection Commands 
+
+  ![block_write_protection_commands](/image/sd/sd_block_write_protection_commands.png)
+
+###### Erase Commands
+
+  ![erase_commands](/image/sd/sd_erase_commands.png)
+
+###### Lock Card Commands
+
+  ![lock_card_commands](/image/sd/sd_lock_card_commands.png)
+
+###### Application-Specific Commands
+
+  ![app_spec_commands](/image/sd/sd_app_specific_commands.png)
+
+  The following table describes all the application-specific commands supported/reserved by the SD Memory Card. All the following ACMDs shall be preceded with APP_CMD commands(CMD55).
+
+  ![ACMD_commands](/image/sd/sd_ACMD_commands.png)
+
+###### I/O Mode Commands
  
+  ![io_mode_commands](/image/sd/sd_io_mode_commands.png)
+
+###### Switch Function Commands
+
+  ![switch_func_commands](/image/sd/sd_switch_func_commands.png)
+
+###### Function Extension Commands
+
+  ![function_extension](/image/sd/sd_func_ext_commands.png)
+
+
+
