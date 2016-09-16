@@ -130,58 +130,58 @@ Concurrency Managed Workqueue
 
 * 在原来的wq机制下，简化后的执行顺序大概如下:
 
-   TIME-IN-MSECS	EVENT 
-   0                    w0 starts and burns CPU 
-   5                    w0 sleeps 
-   15                   w0 wakes up and burns CPU 
-   20                   w0 finishes 
-   20                   w1 starts and burns CPU
-   25                   w1 sleeps 
-   35                   w1 wakes up and finishes 
-   35                   w2 starts and burns CPU 
-   40                   w2 sleeps 
-   50                   w2 wakes up and finishes
+  TIME-IN-MSECS|        EVENT 
+  0           |         w0 starts and burns CPU 
+  5           |         w0 sleeps 
+  15          |         w0 wakes up and burns CPU 
+  20          |         w0 finishes 
+  20          |         w1 starts and burns CPU
+  25          |         w1 sleeps 
+  35          |         w1 wakes up and finishes 
+  35          |         w2 starts and burns CPU 
+  40          |         w2 sleeps 
+  50          |         w2 wakes up and finishes
 
 * 采用cmwq机制，且max_active >= 3的情况下:
 
-  TIME-IN-MSECS         EVENT 
-  0                     w0 starts and burns CPU 
-  5                     w0 sleeps 
-  5                     w1 starts and burns CPU 
-  10                    w1 sleeps 
-  10                    w2 starts and burns CPU 
-  15                    w2 sleeps 
-  15                    w0 wakes up and burns CPU 
-  20                    w0 finishes 
-  20                    w1 wakes up and finishes 
-  25                    w2 wakes up and finishes
+  TIME-IN-MSECS|         EVENT 
+  0            |         w0 starts and burns CPU 
+  5            |         w0 sleeps 
+  5            |         w1 starts and burns CPU 
+  10           |         w1 sleeps 
+  10           |         w2 starts and burns CPU 
+  15           |         w2 sleeps 
+  15           |         w0 wakes up and burns CPU 
+  20           |         w0 finishes 
+  20           |         w1 wakes up and finishes 
+  25           |         w2 wakes up and finishes
 
 * 采用cmwq机制，且max_active = 2的情况下:
 
-  TIME-IN-MSECS         EVENT 
-  0                     w0 starts and burns CPU 
-  5                     w0 sleeps 
-  5                     w1 starts and burns CPU 
-  10                    w1 sleeps 
-  15                    w0 wakes up and burns CPU 
-  20                    w0 finishes 
-  20                    w1 wakes up and finishes  
-  20                    w2 starts and burns CPU 
-  25                    w2 sleeps 
-  35                    w2 wakes up and finishes
+  TIME-IN-MSECS|         EVENT 
+  0            |         w0 starts and burns CPU 
+  5            |         w0 sleeps 
+  5            |         w1 starts and burns CPU 
+  10           |         w1 sleeps 
+  15           |         w0 wakes up and burns CPU 
+  20           |         w0 finishes 
+  20           |         w1 wakes up and finishes  
+  20           |         w2 starts and burns CPU 
+  25           |         w2 sleeps 
+  35           |         w2 wakes up and finishes
 
 * 假设w0加入wq q0，w1和w2加入wq q1中，q1中设置有WQ_CPU_INTENSIVE标志
 
-  TIME-IN-MSECS         EVENT 
-  0                     w0 starts and burns CPU 
-  5                     w0 sleeps 
-  5                     w1 and w2 start and burn CPU 
-  10                    w1 sleeps 
-  15                    w2 sleeps 
-  15                    w0 wakes up and burns CPU 
-  20                    w0 finishes 
-  20                    w1 wakes up and finishes 
-  25                    w2 wakes up and finishes
+  TIME-IN-MSECS|         EVENT 
+  0            |         w0 starts and burns CPU 
+  5            |         w0 sleeps 
+  5            |         w1 and w2 start and burn CPU 
+  10           |         w1 sleeps 
+  15           |         w2 sleeps 
+  15           |         w0 wakes up and burns CPU 
+  20           |         w0 finishes 
+  20           |         w1 wakes up and finishes 
+  25           |         w2 wakes up and finishes
 
 ##### 使用参考
 
