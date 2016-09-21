@@ -20,6 +20,7 @@ tags: sublime
 
     import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf), 'wb').write(urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ','%20')).read()) 
 
+
 ##### 插件安装与卸载
 
 * 下载插件安装包，直接解压到【菜单->Perferences->Browse Packages…】目录；卸载的话就直接在此目录下删掉对应的插件文件夹就可以了。
@@ -46,12 +47,12 @@ tags: sublime
 
 自定义配置在 【Preferences】 -> 【Settings - User】 中添加
 
-* 设置tab的空格数     "tab_size": 4
+* 设置tab的空格数　　　"tab_size": 4
 
-* 用空格替换tab       "translate_tabs_to_spaces": true
+* 用空格替换tab　　　　"translate_tabs_to_spaces": true
 
-* 显示空白字符        "draw_white_space": "all"
+* 显示空白字符　　　　 "draw_white_space": "all"
 
-* 自动换行            "word_wrap": true
+* 自动换行　　　　　　 "word_wrap": true
 
 

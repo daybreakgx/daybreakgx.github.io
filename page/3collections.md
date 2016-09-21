@@ -27,12 +27,18 @@ icon: bookmark
 
 ## 框架
 
+### kernel
+
+* [Kernel历史版本](https://www.kernel.org/pub/linux/kernel/)
+
 ### React
 
 * [深入理解 React -Thinking in React 中文版](http://reactjs.cn/react/docs/thinking-in-react.html)
 * [Thinking in React](http://facebook.github.io/react/docs/thinking-in-react.html)
 
 ## Blogs
+
+* [蜗窝科技](http://www.wowotech.net/)
 
 
 
