@@ -12,7 +12,7 @@ tags: cmwq wq workqueue
 
 下图中显示cmwq中主要结构体的关系
 
-![cmwq_struct_relation](/image/cmwq/cmwq_struct_relation_v1.0.svg)
+![cmwq_struct_relation](/image/cmwq/cmwq_struct_relation_v1.0.png)
 
 ##### cmwq初始化流程
 
