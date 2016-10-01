@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "SD Commands"
-categories: sd
+categories: driver
 tags: sd
 ---
 

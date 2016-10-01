@@ -25,11 +25,12 @@ icon: bookmark
 * [gcc libstdc++](https://gcc.gnu.org/libstdc++/)
 
 
-## 框架
-
-### kernel
+## kernel
 
 * [Kernel历史版本](https://www.kernel.org/pub/linux/kernel/)
+* [fudan_abc的Linux内核专栏](http://blog.csdn.net/fudan_abc)
+
+## 框架
 
 ### React
 

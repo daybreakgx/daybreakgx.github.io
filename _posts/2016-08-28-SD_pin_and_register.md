@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "SD Memory Card-Pins and Registers"
-categories: sd
+categories: driver
 tags: sd
 ---
 

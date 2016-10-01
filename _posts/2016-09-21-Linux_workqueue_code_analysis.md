@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Linux Kernel cmwq 代码分析"
-categories: kernel
+categories: kernelCode
 tags: cmwq wq workqueue
 ---
 

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "SD Memory Card Function Description"
-categories: sd
+categories: driver
 tags: sd
 ---
 

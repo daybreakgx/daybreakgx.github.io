@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "Linux Kernel cmwq 介绍"
-categories: kernel 
-tags: workqueue cmwq wq 
+categories: kernelDoc
+tags: workqueue cmwq wq kernel
 ---
 
 * content
@@ -14,7 +14,7 @@ Concurrency Managed Workqueue
 
 内容参考:
 
-* 内核文档: linux-4.7.2/documentation/workqueue.txt
+* 内核文档: linux-4.4.23/documentation/workqueue.txt
 
 * [蜗窝科技](http://www.wowotech.net/irq_subsystem/cmwq-intro.html)
 

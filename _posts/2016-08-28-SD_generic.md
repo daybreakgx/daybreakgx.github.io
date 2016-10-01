@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "SD基本概念及规格"
-categories: sd
+categories: driver
 tags: sd 
 ---
 

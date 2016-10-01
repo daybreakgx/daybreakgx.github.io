@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Sublime Text 3 使用说明"
-categories: tool editor
+categories: tools
 tags: sublime
 ---
 
