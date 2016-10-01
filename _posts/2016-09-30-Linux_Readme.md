@@ -5,7 +5,7 @@ categories: kernelDoc
 tags: kernel
 ---
 
-*content
+* content
 {:toc}
 
 
