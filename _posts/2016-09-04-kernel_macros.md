@@ -64,3 +64,4 @@ tags: macro
       module_exit(xxx_exit);
 
 
+###### early_initcall

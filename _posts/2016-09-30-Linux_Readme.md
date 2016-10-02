@@ -25,9 +25,6 @@ Linux是操作系统Unix的一个克隆版本，它是由Linus Torvalds和网络
 
 Linux包含了现代成熟的Unix操作系统中的所有特性，如：真正的多任务(multitasking)，虚拟内存(virtual memory)，共享库(shared libraries)，按需加载(demand loading)，执行程序的共享写时拷贝(shared copy-on-write executables)，合适的内存管理(momery management)以及支持IPv4和IPv6的多网络协议栈(multistack networking)。
 
-It is distributed under the GNU General Public License - see the
-accompanying COPYING file for more details.
-
 Linux的发布遵循GNU GPL(General Public License)，详情参见COPYING文件。
 
 
@@ -36,11 +33,13 @@ Linux的发布遵循GNU GPL(General Public License)，详情参见COPYING文件�
 虽然Linux最初是为32位的x86架构(386或更高)的机器开发的，但是到目前为止，Linux还支持下面的硬件架构:
 Compaq Alpha AXP, Sun SPARC and UltraSPARC, Motorola 68000, PowerPC, PowerPC64, ARM, Hitachi SuperH, Cell, IBM S/390, MIPS, HP PA-RISC, Intel IA-64, DEC VAX, AMD x86-64, AXIS CRIS, Xtensa, Tilera TILE, AVR32, ARC and Renesas M32R。
 
-Linux很容易移植到支持分页内存管理单元(paged memory management unit, PMMU)机制和GUN C编译(gcc)接口的32位/64位的体系中。Linux也可以移植到不支持PMMU的体系架构中，但是功能上会有一些限制。Linux还能移植到它自己身上。你可以像用户空间的应用程序一样运行内核--这叫“用户模式 Linux”（UserMode Linux，简称UML）。
+Linux很容易移植到支持分页内存管理单元(paged memory management unit, PMMU)机制和GUN C编译(gcc)接口的32位/64位的硬件架构体系中。
+Linux也可以移植到不支持PMMU的体系架构中，但是功能上会有一些限制。
+Linux还能移植到它自己身上。你可以像用户空间的应用程序一样运行内核--这叫“用户模式 Linux”（UserMode Linux，简称UML）。
 
 #### 文档
 
-* 目前已经有大量的电子版或纸质的针对Linux或关于通用Unix问题的文档。建议仔细查看Linux中的documentation子目录中的LDP(Linux Documentation Project)。本文档不是作为系统的文档而提供的：有很多更好的资源适合你去阅读。
+* 目前已经有大量的电子版或纸质的针对Linux或关于通用Unix问题的文档。建议仔细查看Linux中的Documentation子目录中的LDP(Linux Documentation Project)。本文档不是作为系统的文档而提供的，有很多更好的资源适合你去阅读。
 
 * 在Documantation子目录下有很多的readme文件，这些文件包含了内核特有的安装说明等内容。 Documentation/00-INDEX文件中列出了所有这些readme的简介。 Change文件中包含了新版本合入的问题信息，这些可以帮助确认是否需要升级内核。
 
