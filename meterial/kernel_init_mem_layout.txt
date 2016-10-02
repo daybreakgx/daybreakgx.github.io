@@ -1,0 +1,48 @@
+
+
+         |                               |
+  0A0000 +-------------------------------+
+         |    Reserved for BIOS          |  Do not use. Reserved for BIOS EBDA.
+  09A000 +-------------------------------+
+         |    Command line               |
+         |    Stack/heap                 |  For use by the kernel real-mode code.
+  098000 +-------------------------------+
+         |    Kernel setup               |  The kernel real-mode code.
+  090200 +-------------------------------+
+         |    Kernel boot sector         |  The kernel legacy boot sector.
+  090000 +-------------------------------+
+         |    Protected-mode kernel      |  The bulk of the kernel image.
+  010000 +-------------------------------+
+         |    Boot loader                |  <- Boot sector entry point(cs:EIP = 0x0000:7c00)
+  001000 +-------------------------------+
+         |    Reserved for MBR/BIOS      |
+  000800 +-------------------------------+
+         |    Typically used by MBR      |
+  000600 +-------------------------------+
+         |    BIOS use only              |
+  000000 +-------------------------------+
+
+
+
+         ~                               ~
+         |    Protected-mode kernel      |  从1M开始时保护模式的内核代码
+  100000 +-------------------------------+
+         |    I/O memory hole            |  从640K到1M留给BIOS映射ISA图形卡的的内部内存
+  0A0000 +-------------------------------+
+         |    Reserved for BIOS          |  这一部分内存尽可能多，扩展的BIOS要用到这部分内存
+         ~                               ~
+         |    Command line               |  Command line的内存也可能位于 X+10000 以下
+ X+10000 +-------------------------------+
+         |    Stack/heap                 |  实模式内核代码使用的堆栈
+ X+08000 +-------------------------------+
+         |    Kernel setup               |  实模式内核代码
+         |    Kernel boot sector         |  历史遗留下的内核启动扇区
+       X +-------------------------------+
+         |    Boot loader                |  启动扇区入口位置(cs:EIP = 0x0000:7c00)
+  001000 +-------------------------------+
+         |    Reserved for MBR/BIOS      |
+  000800 +-------------------------------+
+         |    Typically used by MBR      |
+  000600 +-------------------------------+
+         |    BIOS use only              |
+  000000 +-------------------------------+
