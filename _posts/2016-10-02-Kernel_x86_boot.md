@@ -335,3 +335,302 @@ tag: kernel boot X86
 
 >所有字段的字节序为小端模式(x86)
 
+
+#### 映像校验和
+
+从2.08版本的引导协议开始，对整个文件都会进行CRC-32进行校验，CRC-32校验算法采用典型的生成多项式0x4C11DB7和余数部分0xFFFFFFFF。 校验和被增加到文件后面，所以当对首部中的syssize大小的整个文件再次CRC校验时，结果应该总是为0。
+
+#### 内核命令行
+
+内核命令行是bootloader与内核之间进行通信的一种重要方式。 有些内核命令行选项对bootloader也是有意义的。具体信息参见下面的 special command line options 部分。
+
+内核命令行是一个包含结束符的字符串。 它的最大长度保存在cmdline_size字段中。 在2.06之前的协议中，最大长度为255个字符。 如果长度超过最大长度是，内核会自动截断。
+
+在2.02及以后的协议版本中，内核命令行的地址被保存在首部的cmd_line_ptr字段中。 这个地址可以是setup head结尾到0xA0000之间的任何一个位置。
+
+如果使用的2.02以前的协议，内核命令行的获取采用下面的方式:
+
+    At offset 0x0020 (word), "cmd_line_magic", enter the magic
+    number 0xA33F.
+
+    At offset 0x0022 (word), "cmd_line_offset", enter the offset
+    of the kernel command line (relative to the start of the
+    real-mode kernel).
+    
+    The kernel command line *must* be within the memory region
+    covered by setup_move_size, so you may need to adjust this
+    field.
+
+##### 实模式下的内存布局
+
+实模式代码启动时需要一个堆栈和一个用于存储内核命令行的内存空间。 这些内存需要在最低的1M空间内分配。
+
+在现代机器中，通常都包含了EBDA区域，所以最好能尽可能少的使用最低的1M空间的内存。
+
+在2.02以前的协议版本中，老的内核可能要求必须加载到0x90000的地址，此时要避免使用0x9a000以上的内存。
+
+在2.02及以后的协议版本中，命令行没有必要一定与实模式启动代码在同一个64K数据段中。所以允许stack/heap使用64K的全部内存，然后在stack/heap上面再给命令行分配内存。
+
+内核命令行不能保存在低于实模式代码的地址空间中，也不能保存到高内存地址中。
+
+
+##### 启动配置实例
+
+作为一个简单的配置，假设实模式中段分配如下:
+
+    When loading below 0x90000, use the entire segment:
+
+    0x0000-0x7fff   Real mode kernel
+    0x8000-0xdfff   Stack and heap
+    0xe000-0xffff   Kernel command line
+
+    When loading at 0x90000 OR the protocol version is 2.01 or earlier:
+
+    0x0000-0x7fff   Real mode kernel
+    0x8000-0x97ff   Stack and heap
+    0x9800-0x9fff   Kernel command line
+
+Such a boot loader should enter the following fields in the header:
+
+    unsigned long base_ptr; /* base address for real-mode segment */
+
+    if ( setup_sects == 0 ) {
+        setup_sects = 4;
+    }
+
+    if ( protocol >= 0x0200 ) {
+        type_of_loader = <type code>;
+        if ( loading_initrd ) {
+            ramdisk_image = <initrd_address>;
+            ramdisk_size = <initrd_size>;
+        }
+
+        if ( protocol >= 0x0202 && loadflags & 0x01 )
+            heap_end = 0xe000;
+        else
+            heap_end = 0x9800;
+
+        if ( protocol >= 0x0201 ) {
+            heap_end_ptr = heap_end - 0x200;
+            loadflags |= 0x80; /* CAN_USE_HEAP */
+        }
+
+        if ( protocol >= 0x0202 ) {
+            cmd_line_ptr = base_ptr + heap_end;
+            strcpy(cmd_line_ptr, cmdline);
+        } else {
+            cmd_line_magic  = 0xA33F;
+            cmd_line_offset = heap_end;
+            setup_move_size = heap_end + strlen(cmdline)+1;
+            strcpy(base_ptr+cmd_line_offset, cmdline);
+        }
+    } else {
+        /* Very old kernel */
+
+        heap_end = 0x9800;
+
+        cmd_line_magic  = 0xA33F;
+        cmd_line_offset = heap_end;
+
+        /* A very old kernel MUST have its real-mode code
+           loaded at 0x90000 */
+
+        if ( base_ptr != 0x90000 ) {
+            /* Copy the real-mode kernel */
+            memcpy(0x90000, base_ptr, (setup_sects+1)*512);
+            base_ptr = 0x90000;      /* Relocated */
+        }
+
+        strcpy(0x90000+cmd_line_offset, cmdline);
+
+        /* It is recommended to clear memory up to the 32K mark */
+        memset(0x90000 + (setup_sects+1)*512, 0,
+               (64-(setup_sects+1))*512);
+    }
+
+
+##### 内核剩余部分加载
+
+32-bit(非实模式)内核在起始于内核文件的(setup_sects+1)*512的偏移量处(如果setup_sects为0，强制修改为4)。
+对于Image/zImage内核，需要加载在0x10000处，对于bzImage内核，需要加载0x100000处。
+
+判断内核是否为bzImage的方式为protocol >= 2.00 且 loadflags = 0x01(LOAD_HIGH)
+
+    is_bzImage = (protocol >= 0x0200) && (loadflags & 0x01);
+    load_address = is_bzImage ? 0x100000 : 0x10000;
+
+Image/zImage内核最大可以达到512K，所以使用的内存空间为0x10000 - 0x90000。 这就要求这种内核的实模式部分必须加载在0x90000处。 bzImage内核就有更多的灵活性。
+
+##### SPECIAL COMMAND LINE OPTIONS
+
+如果bootloader提供的命令行是用户输入的，那么用户可能期望使用下面的命令行选项。
+即使这些参数对于内核来说没有什么意义，最好也不要删除这些参数。 bootloader的实现者需要增加新的命令行选项时，需要先将他们注册在 Documentation/kernel-parameters.txt ，确保没有与当前的内核选项有冲突。
+
+  vga=<mode>
+    <mode> 可以是C语言中的integer类型(可以是十进制，八进制或十六进制数)也可以是字符串"normal"(表示0xFFFF)，"ext"(表示0xFFFE)，"ask"(表示0xFFFD)。 这个值会被保存在vid_mode字段中, 内核在解析命令行之前会使用这个字段。
+
+  mem=<size>
+    <size>是一个C语言的integer，后面可以跟着K,M,G,T,P或者E(忽略大小写)，这些字符表示 <<10, <<20, <<30, <<40, <<50和<<60。 该参数选项表示内核在内存中的末尾。 它会影响到initrd存放的位置，因为initrd会存放在内存的末尾附近。
+    注意这个参数选项对内核和bootloader都有意义。
+
+  initrd=<file>
+    指定了需要加载的initrd。 该文件和bootloader是相互独立的，对于某些bootloader(如LILO)不需要这个参数。
+
+另外，某些bootloader添加了下面参数选项用于用户指定的命令行。
+
+  BOOT_IMAGE=<file>
+    表示需要加载的启动映像，同样的，这个文件和bootloader也是相互独立的。
+
+  auto
+    表示内核不需要用户的交互直接启动。
+
+如果bootloader增加了这些参数选项，强烈建议这些参数放在用户指定或配置型指定之前。否则，"init=/bin/sh" auto 这样的配置会让人产生困惑。
+
+##### 运行内核
+
+内核的入口地址位于实模式内核段偏移0x20处。 这意味着，如果你加载的实模式内核代码位置为0x90000，那么内核的入口地址为 9020:0000。
+
+在入口处，ds=es=ss 这些都指向实模式内核代码的起始地址(如果起始地址为0x90000那么ds=0x9000)，sp 通常指向heap的顶部，同时需要禁止中断。 此外，为了预防内核bug，建议bootloader设置fs = gs = ds = es = ss。
+
+    /* Note: in the case of the "old" kernel protocol, base_ptr must
+       be == 0x90000 at this point; see the previous sample code */
+
+    seg = base_ptr >> 4;
+
+    cli();  /* Enter with interrupts disabled! */
+
+    /* Set up the real-mode kernel stack */
+    _SS = seg;
+    _SP = heap_end;
+
+    _DS = _ES = _FS = _GS = seg;
+    jmp_far(seg+0x20, 0);   /* Run the kernel */
+
+##### ADVANCED BOOT LOADER HOOKS
+
+如果bootloader运行在一个非正常环境时(如运行在DOS下的LOADLIN)，有可能无法获取标准内存。
+这种情况下，bootloader需要使用hook了，内核会在合适的时间会调用hook。 hook就是最后的手段了。
+
+重要: 所有的hook在调用时，都需要保存%esp, %ebp, %esi和%edi。
+
+  realmode_swtch:
+    在进入保护模式之前需要进行16位实模式下远子程序调用。 默认程序会禁止NMI。
+    
+  realmode_swtch:
+    A 16-bit real mode far subroutine invoked immediately before
+    entering protected mode.  The default routine disables NMI, so
+    your routine should probably do so, too.
+
+  code32_start:
+    A 32-bit flat-mode routine *jumped* to immediately after the
+    transition to protected mode, but before the kernel is
+    uncompressed.  No segments, except CS, are guaranteed to be
+    set up (current kernels do, but older ones do not); you should
+    set them up to BOOT_DS (0x18) yourself.
+
+    After completing your hook, you should jump to the address
+    that was in this field before your boot loader overwrote it
+    (relocated, if appropriate.)
+
+
+**** 32-bit BOOT PROTOCOL
+
+For machine with some new BIOS other than legacy BIOS, such as EFI,
+LinuxBIOS, etc, and kexec, the 16-bit real mode setup code in kernel
+based on legacy BIOS can not be used, so a 32-bit boot protocol needs
+to be defined.
+
+In 32-bit boot protocol, the first step in loading a Linux kernel
+should be to setup the boot parameters (struct boot_params,
+traditionally known as "zero page"). The memory for struct boot_params
+should be allocated and initialized to all zero. Then the setup header
+from offset 0x01f1 of kernel image on should be loaded into struct
+boot_params and examined. The end of setup header can be calculated as
+follow:
+
+    0x0202 + byte value at offset 0x0201
+
+In addition to read/modify/write the setup header of the struct
+boot_params as that of 16-bit boot protocol, the boot loader should
+also fill the additional fields of the struct boot_params as that
+described in zero-page.txt.
+
+After setting up the struct boot_params, the boot loader can load the
+32/64-bit kernel in the same way as that of 16-bit boot protocol.
+
+In 32-bit boot protocol, the kernel is started by jumping to the
+32-bit kernel entry point, which is the start address of loaded
+32/64-bit kernel.
+
+At entry, the CPU must be in 32-bit protected mode with paging
+disabled; a GDT must be loaded with the descriptors for selectors
+__BOOT_CS(0x10) and __BOOT_DS(0x18); both descriptors must be 4G flat
+segment; __BOOT_CS must have execute/read permission, and __BOOT_DS
+must have read/write permission; CS must be __BOOT_CS and DS, ES, SS
+must be __BOOT_DS; interrupt must be disabled; %esi must hold the base
+address of the struct boot_params; %ebp, %edi and %ebx must be zero.
+
+**** 64-bit BOOT PROTOCOL
+
+For machine with 64bit cpus and 64bit kernel, we could use 64bit bootloader
+and we need a 64-bit boot protocol.
+
+In 64-bit boot protocol, the first step in loading a Linux kernel
+should be to setup the boot parameters (struct boot_params,
+traditionally known as "zero page"). The memory for struct boot_params
+could be allocated anywhere (even above 4G) and initialized to all zero.
+Then, the setup header at offset 0x01f1 of kernel image on should be
+loaded into struct boot_params and examined. The end of setup header
+can be calculated as follows:
+
+    0x0202 + byte value at offset 0x0201
+
+In addition to read/modify/write the setup header of the struct
+boot_params as that of 16-bit boot protocol, the boot loader should
+also fill the additional fields of the struct boot_params as described
+in zero-page.txt.
+
+After setting up the struct boot_params, the boot loader can load
+64-bit kernel in the same way as that of 16-bit boot protocol, but
+kernel could be loaded above 4G.
+
+In 64-bit boot protocol, the kernel is started by jumping to the
+64-bit kernel entry point, which is the start address of loaded
+64-bit kernel plus 0x200.
+
+At entry, the CPU must be in 64-bit mode with paging enabled.
+The range with setup_header.init_size from start address of loaded
+kernel and zero page and command line buffer get ident mapping;
+a GDT must be loaded with the descriptors for selectors
+__BOOT_CS(0x10) and __BOOT_DS(0x18); both descriptors must be 4G flat
+segment; __BOOT_CS must have execute/read permission, and __BOOT_DS
+must have read/write permission; CS must be __BOOT_CS and DS, ES, SS
+must be __BOOT_DS; interrupt must be disabled; %rsi must hold the base
+address of the struct boot_params.
+
+**** EFI HANDOVER PROTOCOL
+
+This protocol allows boot loaders to defer initialisation to the EFI
+boot stub. The boot loader is required to load the kernel/initrd(s)
+from the boot media and jump to the EFI handover protocol entry point
+which is hdr->handover_offset bytes from the beginning of
+startup_{32,64}.
+
+The function prototype for the handover entry point looks like this,
+
+    efi_main(void *handle, efi_system_table_t *table, struct boot_params *bp)
+
+'handle' is the EFI image handle passed to the boot loader by the EFI
+firmware, 'table' is the EFI system table - these are the first two
+arguments of the "handoff state" as described in section 2.3 of the
+UEFI specification. 'bp' is the boot loader-allocated boot params.
+
+The boot loader *must* fill out the following fields in bp,
+
+    o hdr.code32_start
+    o hdr.cmd_line_ptr
+    o hdr.ramdisk_image (if applicable)
+    o hdr.ramdisk_size  (if applicable)
+
+All other fields should be zero.
+
