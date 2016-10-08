@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Linux Kernel macros"
+title: "Linux Kernel macros - module_platform_driver"
 categories: kernelCode 
 tags: macro
 ---
@@ -8,8 +8,6 @@ tags: macro
 
 * content
 {:toc}
-
-###### module_platform_driver
 
 * module_platform_driver宏 定义在头文件 platform_device.h 中
 
@@ -62,6 +60,3 @@ tags: macro
           platform_driver_unregister(&(xxx));
       }
       module_exit(xxx_exit);
-
-
-###### early_initcall
