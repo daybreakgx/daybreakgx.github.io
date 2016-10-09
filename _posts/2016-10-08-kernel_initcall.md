@@ -15,6 +15,8 @@ tags: kernel
   + linux-4.4.23/arch/x86/kernel/vmlinux.lds.S
   + linux-4.4.23/include/asm-generic/vmlinux.lds.h
 
+  本文中使用的vmlinux是由linux 4.4.23源码编译。
+
 ##### 相关宏定义
 
 相关代码如下:
@@ -282,13 +284,18 @@ INIT_CALLS 宏定义为:
 
 
 从该ld脚本中可以知道
+
   + linux内核文件中各个section的起始地址为0XFFFFFFFF81000000
   + INIT_CALLS定义在.init.data section中
-  + INIT_CALLS的首尾定义分别为: __initcall_start 和 __initcall_end
+  + INIT_CALLS的首尾定义分别为: __initcall_start(0xffffffff82082ef8) 和 __initcall_end(0xffffffff820842f0)
 
 通过命令 readelf vmlinux 和 nm vmlinux 可以查看 __initcall_start 、 __initcall_end 和 __initcall_init_workqueuesearly等函数的地址信息
 
 ![init_workqueue_early_nm](/image/cmwq/init_workqueue_early_nm.png)
+
+而init_workqueue函数的地址为, 该函数位于 .init.text section中，该section的起始和结束地址分别为: ffffffff81f56000 和 ffffffff81fbbae4。 
+
+![init_workqueues_nm](/image/cmwq/init_workqueues_nm.png)
 
 
 ##### 内核执行initcalls系列函数
