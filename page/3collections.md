@@ -23,6 +23,7 @@ icon: bookmark
 
 * [C++](http://www.cplusplus.com/)
 * [gcc libstdc++](https://gcc.gnu.org/libstdc++/)
+* [gcc releases](http://ftp.gnu.org/gnu/gcc)
 
 
 ## kernel
