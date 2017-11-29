@@ -5,4 +5,7 @@ Plugin 'VundleVim/Vundle.vim'
 call vundle#end()
 
 Bundle 'ctags.vim'
+Bundle 'scrooloose/nerdtree'
+Bundle 'jistr/vim-nerdtree-tabs'
+Bundle 'Xuyuanp/nerdtree-git-plugin'
 
