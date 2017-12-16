@@ -96,13 +96,11 @@ install_vim(){
     apt install vim
     echo "[config]===>install vundle"
     git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-    echo "set nocompatible
-filetype off
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-Plugin 'VundleVim/Vundle.vim'
-call vundle#end()
-filetype plugin indent on" > ~/.vimrc
+
+    echo "[config]===>install ctags"
+	apt install ctags
+	echo "[config]===>install cscope"
+	apt install cscope
     echo "[TOOL]----------install vim OK"
     return 0
 }

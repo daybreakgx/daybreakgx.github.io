@@ -8,4 +8,6 @@ Bundle 'ctags.vim'
 Bundle 'scrooloose/nerdtree'
 Bundle 'jistr/vim-nerdtree-tabs'
 Bundle 'Xuyuanp/nerdtree-git-plugin'
-
+Bundle 'taglist.vim'
+Bundle 'cscope.vim'
+Bundle 'powerline/powerline'
