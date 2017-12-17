@@ -132,6 +132,23 @@ install_go(){
     echo "[TOOL]----------install go OK"
 }
 
+install_vim_markdown(){
+	output=$(which npm)
+	if [ $? == 0 ];then
+	    echo "[TOOL]----------install npm"
+	    apt install npm
+	fi
+	output=$(which nodejs)
+	if [ $? == 0 ];then
+	    echo "[TOOL]----------install nodejs"
+		add-apt-repository ppa:chris-lea/node.js
+		apt-get update
+		apt install nodejs
+	fi
+	echo "[TOOL]----------install vim markdown tool"
+	npm -g install instant-markdown-d
+}
+
 main(){
 
     change_sh_to_bash
@@ -153,6 +170,7 @@ main(){
     install_expect
     install_atom
     install_go
+	install_vim_markdown
 }
 
 main
