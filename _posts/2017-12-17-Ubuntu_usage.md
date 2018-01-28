@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "vim使用"
+title: "Ubuntu常用总结"
 categories: tools
 tags: vim
 ---

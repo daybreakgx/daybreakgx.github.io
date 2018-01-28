@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "vim使用"
+title: "vim markdown插件"
 categories: tools
 tags: vim
 ---
